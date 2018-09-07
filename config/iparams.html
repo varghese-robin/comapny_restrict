@@ -19,17 +19,22 @@
 
         </div>
 
-        <hr id='line1' style="border: 0.5px ridge lightgrey; display: none;" class='seprator' >
+        <hr id='line1' style="border: 0.5px ridge lightgrey; display: none;" class='separator' >
 
         <div id='commonFields' style="display: none;"><strong>Enter the Fields that are Common across all the companies</strong></div>
 
-        <button id='startMap' style="display: none;">Start Mapping Companies to Fields</button>
+        <div id='commonFieldsArray' style="display: none;" onclick="showCommonFieldsDropdown()"></div>
+        <div id='commonFieldsArrayDropdown' style="display: none;"></div>
 
-        <hr style="border: 0.5px ridge lightgrey;" class='seprator'>
+        <div class='clear'></div>
+
+        <button id='startMap' style="display: none;background-color: darkblue; border-radius: 5px; color: white;" onclick='startMap()'>Start Mapping Companies to Fields</button>
+
+        <hr style="border: 0.5px ridge lightgrey;" class='separator'>
 
         <br/>
         <p id='instruct1' style="display: none;">5000241140</p>
-        <div id='configBox'>
+        <div id='configBox' style="display: none;">
         </div>
 
         <button id='addConfig' onclick='addConfigs()' style="display: none;">Add New Company Configuration</button>
@@ -112,7 +117,25 @@
             }
 
             .clear {
-                clear:both;
+                clear: both;
+            }
+
+            #commonFieldsArray {
+                min-height: 30px;
+                width: 95%;
+                float: left;
+                border: 1px solid lightgrey;
+                padding: 4px;
+                margin-bottom: 20px;
+                margin-top: 10px;
+            }
+
+            #commonFieldsArrayDropdown {
+              width: 95%;
+              border: 1px solid lightgrey;
+              height: 100px;
+              overflow: scroll;
+              margin-bottom: 20px;
             }
 
             .fieldArray {
@@ -122,7 +145,8 @@
                 float: left;
                 border: 1px solid lightgrey;
                 padding: 4px;
-                margin-bottom: 20px;
+                background-color: lightgrey;
+                margin-bottom: 30px;
             }
 
             .fieldDropdown {
@@ -134,11 +158,11 @@
                 margin-bottom: 20px;
             }
 
-            .fieldButton {
+            .fieldButton, .commonFieldButton {
                 margin: 2.5px;
             }
 
-            .fieldArrayFields {
+            .fieldArrayFields, .commonFieldArrayFields {
                 width: auto;
                 float: left;
                 padding: 2px;
@@ -152,13 +176,15 @@
                 padding-right: 10px;
             }
 
-            .removeField {
+            .removeField,
+            .removeCommonField {
                 background-color: rgba(255, 0, 0, 0);
                 border-radius: 3px;
                 border: none;
             }
 
-            .removeField:hover {
+            .removeField:hover,
+            .removeCommonField:hover {
                 color: red;
                 font-weight: bold;
                 font-size: 130%;
@@ -172,7 +198,10 @@
 
         <script type= "text/javascript">
             var n=0;
-            var fieldList = [];
+            var totalFieldList = [];
+            var commonFieldList = [];
+            var configFieldList = [];
+            var companyList = [];
 
             function arrSub(ar1, ar2) {
                 var ar = [];
@@ -196,6 +225,7 @@
 
                 jQuery('#line1').css('display',"block");
                 jQuery('#commonFields').css('display',"block");
+                jQuery('#commonFieldsArray').css('display',"block");
                 jQuery('#startMap').css('display',"block");
 
                 var xhr1 = new XMLHttpRequest();
@@ -206,23 +236,19 @@
 
                 xhr1.onload = function() {
                     if(this.status === 200) {
-                        jQuery('#instruct1').css('display','block');
+
                         var ticketFields = JSON.parse(this.responseText);
 
-                        jQuery('#configBox').append(`<button class="removeBtn" id="removeBtn_${n}" onclick="removeRow(this.id)"><img class="removeIcon" id="removeIcon_${n}"src="http://i66.tinypic.com/oaxhl3.png" border="0" alt="remove_row"></button><div class='companyBox' id='companyBox_${n}'><input class='companyID' id='companyID_${n}'><button class='checkBtn' id='checkBtn_${n}' onclick='fetchCompany(this.id)'><img class='checkImg' id='checkImg_${n}' src="http://i65.tinypic.com/2ag8c1s.png" border="0"></button><div class='clear'></div></div><div class='fieldArray' id='fieldArray_${n}' onclick='fieldOptions(this.id)'></div><div class='fieldDropdown' id='fieldDropdown_${n}' style='display: none;'></div>`);
+                        jQuery('#configBox').append(`<button class="removeBtn" id="removeBtn_${n}" onclick="removeRow(this.id)"><img class="removeIcon" id="removeIcon_${n}"src="http://i66.tinypic.com/oaxhl3.png" border="0" alt="remove_row"></button><div class='companyBox' id='companyBox_${n}'><input class='companyID' id='companyID_${n}'><button class='checkBtn' id='checkBtn_${n}' onclick='fetchCompany(this.id)'><img class='checkImg' id='checkImg_${n}' src="http://i65.tinypic.com/2ag8c1s.png" border="0"></button><div class='clear'></div></div><div class='fieldArray' id='fieldArray_${n}'></div><div class='fieldDropdown' id='fieldDropdown_${n}' style='display: none;'></div><div class='clearS'></div>`);
 
-
-                        for(var i = 0; i<ticketFields.length; i++) {
-                            jQuery(`#fieldDropdown_${n}`).append(`<button class='fieldButton' id="fieldButton_${n}_${i}" value="${ticketFields[i].ticket_field.label}" onclick='fieldName(this.value, this.id)'>${ticketFields[i].ticket_field.label}</button>`);
-                            fieldList.push(ticketFields[i].ticket_field.label);
+                        for(var i = 2; i<ticketFields.length; i++) {
+                            jQuery('#commonFieldsArrayDropdown').append(`<button class='commonFieldButton' id="commonFieldButton_${i}" value="${ticketFields[i].ticket_field.label}" onclick='commonFieldName(this.value, this.id)'>${ticketFields[i].ticket_field.label}</button>`);
+                            totalFieldList.push(ticketFields[i].ticket_field.label);
                         }
 
-                        n++;
-
-                        jQuery('#addConfig').css("display", "block");
 
                     } else {
-                        alert('Could not fetch the Ticket Fields');
+                        console.log('Could not fetch the Ticket Fields');
                     }
 
                 }
@@ -230,66 +256,85 @@
                 xhr1.send();
             }
 
+            function showCommonFieldsDropdown() {
+              jQuery('#commonFieldsArray').css("margin-bottom", 0);
+              jQuery('#commonFieldsArrayDropdown').css("display", "block");
+              event.stopPropagation();
+            }
+
+            function startMap() {
+              jQuery('#instruct1').css('display','block');
+              jQuery('#configBox').css('display','block');
+              jQuery('#addConfig').css("display", "block");
+              jQuery('#startMap').prop("disabled", true);
+              jQuery('#startMap').css('background-color', 'lightgrey');
+              jQuery('#startMap').css('color', 'grey');
+
+              for(var i=1; i<jQuery('#commonFieldsArray')[0].textContent.split('×').length; i++) {
+                  commonFieldList.push(jQuery('#commonFieldsArray')[0].textContent.split('×')[i]);
+              }
+
+              console.log(totalFieldList);
+              console.log(commonFieldList);
+              configFieldList = arrSub(totalFieldList,commonFieldList);
+              console.log(configFieldList);
+
+            }
+
+
             function addConfigs() {
 
-                var apiKey = jQuery('#apiKey').val();
+                jQuery('#configBox').append("<div style='clear: both;'></div>");
 
-                var subdomain = jQuery('#subdomain').val();
+                jQuery('#configBox').append(`<button class="removeBtn" id="removeBtn_${n}" onclick="removeRow(this.id)"><img class="removeIcon" id="removeIcon_${n}"src="http://i66.tinypic.com/oaxhl3.png" border="0" alt="remove_row"></button><div class='companyBox' id='companyBox_${n}'><input class='companyID' id='companyID_${n}'><button class='checkBtn' id='checkBtn_${n}' onclick='fetchCompany(this.id)'><img class='checkImg' id='checkImg_${n}' src="http://i65.tinypic.com/2ag8c1s.png" border="0"></button><div class='clear'></div></div><div class='fieldArray' id='fieldArray_${n}'></div><div class='fieldDropdown' id='fieldDropdown_${n}' style='display: none;'></div>`);
 
-                var xhr2 = new XMLHttpRequest();
-
-                xhr2.open("GET", `https://${subdomain}.freshservice.com/ticket_fields.json`, true);
-
-                xhr2.setRequestHeader("Authorization", "Basic " + btoa(apiKey + ":X"));
-
-                xhr2.onload = function() {
-                    if(this.status === 200) {
-
-                        var ticketFields = JSON.parse(this.responseText);
-
-                        jQuery('#configBox').append("<div style='clear: both;'></div>");
-
-                        jQuery('#configBox').append(`<button class="removeBtn" id="removeBtn_${n}" onclick="removeRow(this.id)"><img class="removeIcon" id="removeIcon_${n}"src="http://i66.tinypic.com/oaxhl3.png" border="0" alt="remove_row"></button><div class='companyBox' id='companyBox_${n}'><input class='companyID' id='companyID_${n}'><button class='checkBtn' id='checkBtn_${n}' onclick='fetchCompany(this.id)'><img class='checkImg' id='checkImg_${n}' src="http://i65.tinypic.com/2ag8c1s.png" border="0"></button><div class='clear'></div></div><div class='fieldArray' id='fieldArray_${n}' onclick='fieldOptions(this.id)'></div><div class='fieldDropdown' id='fieldDropdown_${n}' style='display: none;'></div>`);
-
-
-                        for(var i = 0; i<ticketFields.length; i++) {
-                            jQuery(`#fieldDropdown_${n}`).append(`<button class='fieldButton' id="fieldButton_${n}_${i}" value="${ticketFields[i].ticket_field.label}" onclick='fieldName(this.value, this.id)'>${ticketFields[i].ticket_field.label}</button>`);
-                        }
-
-                        n++;
-
-                    } else {
-                        alert('Could not fetch the Ticket Fields');
-                    }
-
-                }
-
-                xhr2.send();
             }
 
             function fetchCompany(id) {
                 var idNum = id.split('_')[1];
                 var idVal = jQuery('#companyID_'+idNum).val();
 
-                var apiKey = jQuery('#apiKey').val();
-                var subdomain = jQuery('#subdomain').val();
+                if(companyList.includes(idVal)) {
+                  jQuery('#companyBox_'+idNum).append("Sorry the company is already configured!!!");
+                } else {
+                  companyList.push(idVal);
+                  var apiKey = jQuery('#apiKey').val();
+                  var subdomain = jQuery('#subdomain').val();
 
-                var xhr3 = new XMLHttpRequest();
+                  var xhr3 = new XMLHttpRequest();
 
-                xhr3.open("GET", `https://${subdomain}.freshservice.com/itil/departments/${idVal}.json`, true);
+                  xhr3.open("GET", `https://${subdomain}.freshservice.com/itil/departments/${idVal}.json`, true);
 
-                xhr3.setRequestHeader("Authorization", "Basic " + btoa(apiKey + ":X"));
+                  xhr3.setRequestHeader("Authorization", "Basic " + btoa(apiKey + ":X"));
 
-                xhr3.onload = function() {
-                    if(this.status === 200) {
-                        var companyObj = JSON.parse(this.responseText);
-                        jQuery('#companyBox_'+idNum).append(companyObj.itil_department.name);
-                    } else {
-                        alert('Could not fetch the company!!!')
-                    }
+                  xhr3.onload = function() {
+                      if(this.status === 200) {
+                          var companyObj = JSON.parse(this.responseText);
+                          jQuery('#companyBox_'+idNum).append(companyObj.itil_department.name);
+                          jQuery('#companyName_'+idNum).append(companyObj.itil_department.name);
+                          jQuery('#companyBox_'+idNum).attr('id','companyBox_'+idVal);
+                          jQuery('#companyID_'+idNum).attr('id','companyID_'+idVal);
+                          jQuery('#removeBtn_'+idNum).attr('id','removeBtn_'+idVal);
+                          jQuery('#removeIcon_'+idNum).attr('id','removeIcon_'+idVal);
+                          jQuery('#checkBtn_'+idNum).attr('id','checkBtn_'+idVal);
+                          jQuery('#checkImg_'+idNum).attr('id','checkImg_'+idVal);
+                          jQuery('#fieldArray_'+idNum).attr('id','fieldArray_'+idVal);
+                          jQuery('#fieldArray_'+idVal).attr('onclick','fieldOptions(this.id)');
+                          jQuery('#fieldArray_'+idVal).css('background-color','white');
+                          jQuery('#fieldDropdown_'+idNum).attr('id','fieldDropdown_'+idVal);
+
+                          for(var i = 0; i<configFieldList.length; i++) {
+                              jQuery(`#fieldDropdown_${idVal}`).append(`<button class='fieldButton' id="fieldButton_${idVal}_${i}" value="${configFieldList[i]}" onclick='fieldName(this.value, this.id)'>${configFieldList[i]}</button>`);
+                          }
+
+                      } else {
+                          alert('Could not fetch the company!!!')
+                      }
+                  }
+
+                  xhr3.send();
                 }
 
-                xhr3.send();
             }
 
             function fieldOptions(id) {
@@ -302,8 +347,10 @@
 
             jQuery('body').click(function() {
                 jQuery('.fieldDropdown').css("display", "none");
+                jQuery('#commonFieldsArrayDropdown').css("display", "none");
                 jQuery('.fieldArray').css("border-color", "lightgrey");
                 jQuery('.fieldArray').css("margin-bottom","20px");
+                jQuery('#commonFieldsArray').css("margin-bottom","20px");
             });
 
             function fieldName(text, id) {
@@ -312,6 +359,14 @@
                 jQuery('#fieldArray_'+idNum).append(`<div class='fieldArrayFields' id="fieldArrayFields_${idNum}_${optNum}"><button class='removeField' id='removeField_${idNum}_${optNum}' onclick="removeFieldFn(this.id)">&times;</button>${text}</div>`);
                 jQuery('#fieldButton_'+idNum+'_'+optNum).prop("disabled", true);
                 jQuery('#fieldButton_'+idNum+'_'+optNum).css("color", "green");
+                event.stopPropagation();
+            }
+
+            function commonFieldName(text, id) {
+                var optNum = id.split('_')[1];
+                jQuery('#commonFieldsArray').append(`<div class='commonFieldArrayFields' id='commonFieldArrayFields_${optNum}'><button class='removeCommonField' id='removeCommonField_${optNum}' onclick="removeCommonFieldFn(this.id)">&times;</button>${text}</div>`);
+                jQuery('#commonFieldButton_'+optNum).prop("disabled", true);
+                jQuery('#commonFieldButton_'+optNum).css("color", "green");
                 event.stopPropagation();
             }
 
@@ -331,30 +386,43 @@
                 jQuery('#fieldButton_'+idNum+'_'+optNum).css("color", "black");
             }
 
+            function removeCommonFieldFn(id) {
+                var optNum = id.split('_')[1];
+                jQuery('#commonFieldArrayFields_'+optNum).remove();
+                jQuery('#commonFieldButton_'+optNum).prop("disabled", false);
+                jQuery('#commonFieldButton_'+optNum).css("color", "black");
+            }
+
             function fetchArrays() {
                 var companyIDs = [];
                 var fieldNames = [];
-                var configObj = {};
+                var hideObj = {};
+                var showObj ={};
+
                 jQuery('.fieldArray').each(function() {
                     var text = this.textContent;
                     var textArray = text.split('×');
                     textArray.shift();
                     fieldNames.push(textArray);
                 });
+
                 jQuery('.companyID').each(function() {
                     companyIDs.push(this.value);
                 });
-                console.log(fieldList);
+
                 if(fieldNames.length === companyIDs.length) {
                     for(var i=0; i<fieldNames.length; i++) {
-                        var testArray = fieldList.slice();
-                        console.log(fieldNames[i]);
-                        configObj[companyIDs[i]] = arrSub(testArray,fieldNames[i]);
+                        var testArray = totalFieldList.slice();
+                        testArray = arrSub(testArray,commonFieldList);
+                        showObj[companyIDs[i]] = fieldNames[i].concat(commonFieldList);
+                        hideObj[companyIDs[i]] = arrSub(testArray,fieldNames[i]);
                     }
                 } else {
                     console.log("error");
                 }
-                console.log(configObj);
+
+                console.log(showObj);
+                console.log(hideObj);
 
             }
 
